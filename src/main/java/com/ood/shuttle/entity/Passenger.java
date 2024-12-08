@@ -1,14 +1,12 @@
 package com.ood.shuttle.entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -19,18 +17,28 @@ public class Passenger {
     @GeneratedValue
     private Long id;
 
-    private Long suid;
-    private String address;
+    @ManyToOne
+    @JoinColumn(name = "suid", referencedColumnName = "suid")
+    private Student student;
 
-    private int shuttleId;
+    private String address;
 
     private LocalDateTime dateTime;
 
     @Transient
     private float distance;
 
+    //used by contains in dropOffHandler
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Passenger passenger)) return false;
+        return Objects.equals(this.student.getSuid(), passenger.student.getSuid()) && Objects.equals(address, passenger.address) && Objects.equals(dateTime, passenger.dateTime);
+    }
 
-
-
+    @Override
+    public int hashCode() {
+        return Objects.hash(student.getSuid(), address, dateTime);
+    }
 }

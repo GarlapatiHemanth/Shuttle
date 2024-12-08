@@ -1,20 +1,19 @@
 package com.ood.shuttle.BO.impl;
 
 import com.ood.shuttle.BO.DropOffInterface;
+import com.ood.shuttle.BO.DropOffStrategy;
 import com.ood.shuttle.BO.ShuttleObserver;
 import com.ood.shuttle.entity.Passenger;
-import com.ood.shuttle.model.ShuttleModel;
 import com.ood.shuttle.repo.PassengersRepo;
 import com.ood.shuttle.repo.ShuttleLocationRepo;
+import com.ood.shuttle.service.ShuttleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Component
@@ -23,7 +22,7 @@ public class DropOffHandler implements ShuttleObserver, DropOffInterface {
     private static final Logger log = LoggerFactory.getLogger(DropOffHandler.class);
 
 
-    private ShuttleModel shuttleModel;
+    private ShuttleService shuttleService;
 
     @Autowired
     ShuttleLocationRepo shuttleLocationRepo;
@@ -31,32 +30,21 @@ public class DropOffHandler implements ShuttleObserver, DropOffInterface {
     @Autowired
     PassengersRepo passengersRepo;
 
-    public DropOffHandler() {
-        this.shuttleModel=ShuttleModel.One;
-    }
+    @Autowired
+    DropOffStrategy dropOffStrategy;
 
 
     @Override
-    public void updateShuttle(ShuttleModel shuttle) {
+    public void updateShuttle(ShuttleService shuttle) {
 
-        this.shuttleModel = shuttle;
+        this.shuttleService = shuttle;
 
     }
 
-
+//todo
     public List<Passenger> getNextPassenger() {
 
-        if (shuttleModel.getPassengers()!=null &&!shuttleModel.getPassengers().isEmpty()) {
-
-            distanceCalculator();
-            return shuttleModel.getPassengers().stream()
-                    .min(Comparator.comparing(Passenger::getDistance))
-                    .map(minPassenger -> shuttleModel.getPassengers().stream()
-                            .filter(p -> p.getDistance() == minPassenger.getDistance())
-                            .collect(Collectors.toList()))
-                    .orElse(List.of());
-        }
-        return null;
+        return dropOffStrategy.fetchNextPassengers(shuttleService);
     }
 
 
@@ -76,7 +64,7 @@ public class DropOffHandler implements ShuttleObserver, DropOffInterface {
     public void updatePassengersAfterDropOff(List<Passenger> passengerList) {
 
 
-        shuttleModel.setPassengers(shuttleModel.getPassengers().stream()
+        shuttleService.setPassengers(shuttleService.getPassengers().stream()
                         .filter(p -> !passengerList.contains(p))
                         .collect(Collectors.toList()));
 
@@ -85,24 +73,15 @@ public class DropOffHandler implements ShuttleObserver, DropOffInterface {
 
     @Override
     public List<Passenger> mergePassengers(List<Passenger> passengers, List<Passenger> passengersRequest) {
-        if(passengers!=null && !passengers.isEmpty()) {
-            if(passengersRequest!=null && !passengersRequest.isEmpty()) {
+        if(passengers!=null && !passengers.isEmpty() && passengersRequest!=null && !passengersRequest.isEmpty()) {
+
                 for (Passenger passenger : passengersRequest) {
                     if(!passengers.contains(passenger)) {
                         passengers.add(passenger);
                     }
                 }
             }
-        }
+
         return passengers;
-    }
-
-     private void distanceCalculator() {
-        //calculates distance between current location of shuttle to passengers location
-
-        Random random = new Random();
-        for (Passenger passenger : shuttleModel.getPassengers()) {
-            passenger.setDistance(random.nextFloat(10));
-        }
     }
 }

@@ -1,12 +1,10 @@
 package com.ood.shuttle.BO;
 
-
-import com.ood.shuttle.model.ShuttleModel;
-
+import com.ood.shuttle.service.ShuttleService;
 
 
 public interface ShuttleObserver {
 
-    default void updateShuttle(ShuttleModel shuttle){}
+    default void updateShuttle(ShuttleService shuttle){}
 
 }

@@ -18,8 +18,6 @@ public class ShuttleLocation {
     @Id
     private long id;
 
-    private long shuttleId;
-
     private double latitude;
 
     private double longitude;

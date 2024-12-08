@@ -1,50 +1,49 @@
 package com.ood.shuttle.controller;
 
 import com.ood.shuttle.entity.Passenger;
-import com.ood.shuttle.service.ShuttleServices;
+import com.ood.shuttle.service.ShuttleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@EnableScheduling
 @RequestMapping("/ip")
 public class ShuttleController {
 
     private static final Logger log = LoggerFactory.getLogger(ShuttleController.class);
     @Autowired
-    ShuttleServices shuttleServices;
+    ShuttleService shuttleService;
 
-    @GetMapping("/addPassenger")
+    @PostMapping("/addPassenger")
     public ResponseEntity<Object> addPassenger(@RequestParam(name="suid") Long suid,@RequestParam(name="address") String address){
 
-
-        return shuttleServices.addPassengerToShuttle(suid,address);
+        log.info("Adding passenger with suid {} and address {}", suid, address);
+        return shuttleService.addPassengerToShuttle(suid,address);
     }
 
-    @GetMapping("/shuttleLocation")
+    @PostMapping("/shuttleLocation")
     public ResponseEntity<Object> updateShuttleLocation(@RequestParam double longitude, @RequestParam double latitude) {
 
-        return shuttleServices.updateShuttleLocation(longitude,latitude);
+        log.info("Update shuttle location");
+        return shuttleService.updateShuttleLocation(longitude,latitude);
     }
 
     @GetMapping("/fetchNextPassenger")
     public ResponseEntity<Object> fetchNextPassenger() {
+        log.info("Fetching next passenger");
 
-        return shuttleServices.fetchNextPassengerToDropOffShuttle();
+        return shuttleService.fetchNextPassengerToDropOffShuttle();
     }
 
     @PostMapping("/dropOff")
     public ResponseEntity<Object> dropOff(@RequestBody(required = false) List<Passenger> passengers)  {
         log.info("Drop off shuttle");
 
-        return shuttleServices.dropPassengers(passengers);
+        return shuttleService.dropPassengers(passengers);
     }
 
 

@@ -1,9 +1,7 @@
 package com.ood.shuttle.service;
 
-import com.ood.shuttle.controller.StudentController;
 import com.ood.shuttle.entity.Student;
 import com.ood.shuttle.model.StudentModel;
-import com.ood.shuttle.model.StudentStatus;
 import com.ood.shuttle.repo.StudentRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +41,7 @@ public class StudentServices {
             if(!studentModelList.isEmpty()){
                 List<Student> studentList=new ArrayList<>();
                 for (StudentModel studentModel : studentModelList) {
-                    studentList.add(studentModelAdapter(studentModel,StudentStatus.Idle));
+                    studentList.add(studentModelAdapter(studentModel));
                 }
 
                 studentRepo.saveAll(studentList);
@@ -60,13 +58,12 @@ public class StudentServices {
     }
 
 
-    private Student studentModelAdapter(StudentModel studentModel, StudentStatus studentStatus){
+    private Student studentModelAdapter(StudentModel studentModel){
         Student student = new Student();
         student.setSuid(Long.parseLong(studentModel.getSuid()));
         student.setName(studentModel.getName());
         student.setAddress(studentModel.getAddress());
         student.setNetId(studentModel.getNetId());
-        student.setStatus(studentStatus.name());
         return student;
     }
 }

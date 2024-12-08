@@ -5,13 +5,15 @@ import com.ood.shuttle.entity.ShuttleLocation;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
+
 
 public interface ShuttleLocationRepo extends CrudRepository<ShuttleLocation, Long>  {
 
-    @Query("SELECT sl FROM ShuttleLocation sl WHERE sl.shuttleId = :shuttleId ORDER BY sl.dateTime DESC LIMIT 1")
-    ShuttleLocation findLastValueByShuttleId(int shuttleId);
+    @Query("SELECT sl FROM ShuttleLocation sl ORDER BY sl.dateTime DESC LIMIT 1")
+    ShuttleLocation findLastValue();
 
-    ShuttleLocation findByIdAndShuttleId(Long id, Integer shuttleId);
+    Optional<ShuttleLocation> findById(Long id);
 
 
 }

@@ -16,7 +16,6 @@ public class Student {
     private String name;
     private String netId;
     private String address;
-    private String status;
 
 
 }

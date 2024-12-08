@@ -2,12 +2,13 @@ package com.ood.shuttle.BO.impl;
 
 import com.ood.shuttle.BO.ShuttleObserver;
 import com.ood.shuttle.entity.ShuttleLocation;
-import com.ood.shuttle.model.ShuttleModel;
 import com.ood.shuttle.repo.ShuttleLocationRepo;
+import com.ood.shuttle.service.ShuttleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 
 @Component
@@ -17,17 +18,17 @@ public class LocationSaver implements ShuttleObserver {
     ShuttleLocationRepo shuttleLocationRepo;
 
     @Override
-    public void updateShuttle(ShuttleModel shuttle) {
+    public void updateShuttle(ShuttleService shuttle) {
         saveLocationToDB(shuttle);
 
     }
 
-    public void saveLocationToDB(ShuttleModel shuttle) {
+    public void saveLocationToDB(ShuttleService shuttle) {
 
-        ShuttleLocation shuttleLastLocation = shuttleLocationRepo.findLastValueByShuttleId(shuttle.ordinal());
+        ShuttleLocation shuttleLastLocation = shuttleLocationRepo.findLastValue();
 
-        if (shuttleLastLocation == null || shuttleLastLocation.getLongitude() != shuttle.getLongitude()
-                || shuttleLastLocation.getLatitude() != shuttle.getLatitude()) {
+        if (shuttleLastLocation == null || shuttleLastLocation.getLongitude() != shuttle.getCurrentLongitude()
+                || shuttleLastLocation.getLatitude() != shuttle.getCurrentLatitude()) {
             shuttleLocationRepo.save(getShuttleLocationModel(shuttle, shuttleLastLocation));
         }
     }
@@ -47,15 +48,16 @@ public class LocationSaver implements ShuttleObserver {
     }
 
 
-    private ShuttleLocation getShuttleLocationModel(ShuttleModel shuttle, ShuttleLocation lastLocation) {
+    private ShuttleLocation getShuttleLocationModel(ShuttleService shuttle, ShuttleLocation lastLocation) {
 
-        ShuttleLocation shuttleLocation=shuttleLocationRepo.findByIdAndShuttleId((long) getId(lastLocation),shuttle.ordinal());
+        ShuttleLocation shuttleLocation=shuttleLocationRepo.findById((long) getId(lastLocation)).isPresent()?
+                shuttleLocationRepo.findById((long) getId(lastLocation)).get():null;
 
         shuttleLocation =shuttleLocation!=null?shuttleLocation: new ShuttleLocation();
+
         shuttleLocation.setId(getId(lastLocation));
-        shuttleLocation.setLongitude(shuttle.getLongitude());
-        shuttleLocation.setLatitude(shuttle.getLatitude());
-        shuttleLocation.setShuttleId(shuttle.ordinal());
+        shuttleLocation.setLongitude(shuttle.getCurrentLongitude());
+        shuttleLocation.setLatitude(shuttle.getCurrentLatitude());
         shuttleLocation.setDateTime(LocalDateTime.now());
 
         return shuttleLocation;
