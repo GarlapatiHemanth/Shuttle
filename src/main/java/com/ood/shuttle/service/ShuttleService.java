@@ -164,7 +164,7 @@ public class ShuttleService implements ShuttleInterface {
         currentState=idleState;
     }
 
-    public void addPassenger(Passenger passenger) {
+    private void addPassenger(Passenger passenger) {
         passengers.add(passenger);
         notifyObservers();
     }
