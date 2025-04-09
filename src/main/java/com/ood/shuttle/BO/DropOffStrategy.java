@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface DropOffStrategy {
 
-    List<Passenger> fetchNextPassengers(ShuttleService shuttleService);
+
+    List<Passenger> reorderPassengerList(ShuttleService shuttleService);
+
+    List<Passenger> getNextPassenger(ShuttleService shuttleService);
 }

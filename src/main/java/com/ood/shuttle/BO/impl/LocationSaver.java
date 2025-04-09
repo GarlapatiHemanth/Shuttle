@@ -23,7 +23,7 @@ public class LocationSaver implements ShuttleObserver {
 
     }
 
-    public void saveLocationToDB(ShuttleService shuttle) {
+    private void saveLocationToDB(ShuttleService shuttle) {
 
         ShuttleLocation shuttleLastLocation = shuttleLocationRepo.findLastValue();
 
@@ -33,7 +33,7 @@ public class LocationSaver implements ShuttleObserver {
         }
     }
 
-    public int getId(ShuttleLocation lastLocation) {
+    private int getId(ShuttleLocation lastLocation) {
 
         if (lastLocation != null) {
 

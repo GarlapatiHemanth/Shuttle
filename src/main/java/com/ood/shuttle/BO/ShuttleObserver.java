@@ -4,7 +4,6 @@ import com.ood.shuttle.service.ShuttleService;
 
 
 public interface ShuttleObserver {
-
-    default void updateShuttle(ShuttleService shuttle){}
+    void updateShuttle(ShuttleService shuttle);
 
 }

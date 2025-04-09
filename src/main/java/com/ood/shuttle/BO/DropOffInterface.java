@@ -14,7 +14,7 @@ public interface DropOffInterface {
             passengers=mergePassengers(passengers,passengerList);
             if (passengers!=null && !passengers.isEmpty()) {
 
-                savePassengersToDb(passengers);
+
                 updatePassengersAfterDropOff(passengers);
 
             }
@@ -25,7 +25,7 @@ public interface DropOffInterface {
 
     List<Passenger> getNextPassenger();
 
-    void savePassengersToDb(List<Passenger> passengers);
+
 
     void updatePassengersAfterDropOff(List<Passenger> passengerList);
 }

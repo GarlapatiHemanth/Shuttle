@@ -32,6 +32,7 @@ public class ShuttleController {
         return shuttleService.updateShuttleLocation(longitude,latitude);
     }
 
+    //below two are additional end points but not necessarily required to be called. Since i am updating the passenger list.
     @GetMapping("/fetchNextPassenger")
     public ResponseEntity<Object> fetchNextPassenger() {
         log.info("Fetching next passenger");
@@ -39,6 +40,7 @@ public class ShuttleController {
         return shuttleService.fetchNextPassengerToDropOffShuttle();
     }
 
+    //driver can pass the list of students getting dropped or just call this end point without any parameter
     @PostMapping("/dropOff")
     public ResponseEntity<Object> dropOff(@RequestBody(required = false) List<Passenger> passengers)  {
         log.info("Drop off shuttle");

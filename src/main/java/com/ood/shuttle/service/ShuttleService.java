@@ -5,6 +5,7 @@ import com.ood.shuttle.BO.ShuttleObserver;
 import com.ood.shuttle.BO.ShuttleState;
 import com.ood.shuttle.entity.Passenger;
 import com.ood.shuttle.entity.Student;
+import com.ood.shuttle.repo.PassengersRepo;
 import com.ood.shuttle.repo.StudentRepo;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,8 +40,16 @@ public class ShuttleService implements ShuttleInterface {
     @Autowired
     ShuttleObserver locationObserver;
 
+    @Qualifier("locationNotification")
+    @Autowired
+    ShuttleObserver locationNotification;
+
+
     @Autowired
     StudentRepo studentRepo;
+
+    @Autowired
+    PassengersRepo passengersRepo;
 
     //considered college place as initial
 
@@ -61,7 +71,9 @@ public class ShuttleService implements ShuttleInterface {
 
     private List<Passenger> passengers;
 
-    private List<ShuttleObserver> observers ;
+    private List<ShuttleObserver> locationObservers;
+
+    private List<ShuttleObserver> passengerObservers;
 
     @Autowired
     public ShuttleService(@Qualifier("idleState") ShuttleState idleState,
@@ -73,24 +85,27 @@ public class ShuttleService implements ShuttleInterface {
     @PostConstruct
     public void initializeShuttle() {
 
-        this.currentLongitude =collegePlaceLongitude;
-        this.currentLatitude =collegePlaceLatitude;
+        this.currentLongitude = collegePlaceLongitude;
+        this.currentLatitude = collegePlaceLatitude;
         this.idleState.setShuttleService(this);
         this.runningState.setShuttleService(this);
-        this.currentState=idleState;
+        this.currentState = idleState;
         this.passengers = new ArrayList<>();
 
-        if (this.observers==null || this.observers.isEmpty()){
-            this.observers = new ArrayList<>();
-            this.addObserver(dropOffObserver);
-            this.addObserver(locationObserver);
-        }
+
+        this.locationObservers = new ArrayList<>();
+        this.addLocationObserver(locationObserver);
+        this.addLocationObserver(locationNotification);
+
+        this.passengerObservers = new ArrayList<>();
+        this.addPassengerObserver(dropOffObserver);
+
     }
 
     //main start
 
     public ResponseEntity<Object> addPassengerToShuttle(Long suid, String address) {
-        if(currentState==idleState){
+        if (currentState == idleState) {
             setCurrentStateToRunningState();
         }
         return currentState.addPassengerToShuttle(suid, address);
@@ -99,11 +114,11 @@ public class ShuttleService implements ShuttleInterface {
 
     public ResponseEntity<Object> updateShuttleLocation(double longitude, double latitude) {
 
-        if(longitude == collegePlaceLongitude && latitude == collegePlaceLatitude &&
-                this.currentLongitude!=collegePlaceLongitude && this.currentLatitude!=collegePlaceLatitude
-        && currentState==runningState){
+        if (longitude == collegePlaceLongitude && latitude == collegePlaceLatitude &&
+                this.currentLongitude != collegePlaceLongitude && this.currentLatitude != collegePlaceLatitude
+                && currentState == runningState) {
 
-           setCurrentStateToIdleState();
+            setCurrentStateToIdleState();
         }
         return currentState.updateShuttleLocation(longitude, latitude);
     }
@@ -120,10 +135,10 @@ public class ShuttleService implements ShuttleInterface {
 
     @Override
     public boolean checkPassenger(Long suid) {
-        try{
+        try {
             return studentRepo.existsById(suid);
-        }catch (Exception e){
-            log.error(e.getMessage(),e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
             throw new RuntimeException(e.getMessage());
         }
 
@@ -132,24 +147,23 @@ public class ShuttleService implements ShuttleInterface {
     @Override
     public void addPassenger(Long suid, String address) {
 
-        try{
+        Passenger passenger = getPassenger(suid, address);
 
-            this.addPassenger(getPassenger(suid,address));
+        addPassengerToList(passenger);
 
-        }catch (Exception e){
-            log.error(e.getMessage());
-        }
+        passengersRepo.save(passenger);
 
     }
 
     //adapter
     private Passenger getPassenger(Long suid, String address) {
 
-        Student student= studentRepo.findBySuid(suid);
+        Student student = studentRepo.findBySuid(suid);
 
         Passenger passenger = new Passenger();
         passenger.setStudent(student);
         passenger.setAddress(address);
+        passenger.setDateTime(LocalDateTime.now());
         return passenger;
 
     }
@@ -157,42 +171,51 @@ public class ShuttleService implements ShuttleInterface {
     //main end
 
     private void setCurrentStateToRunningState() {
-        currentState=runningState;
+        currentState = runningState;
     }
 
     private void setCurrentStateToIdleState() {
-        currentState=idleState;
+        currentState = idleState;
     }
 
-    private void addPassenger(Passenger passenger) {
+    private void addPassengerToList(Passenger passenger) {
         passengers.add(passenger);
-        notifyObservers();
+        notifyPassengerObservers();
     }
 
     // Set location and trigger notifications
     public void setLocation(double longitude, double latitude) {
         this.currentLongitude = longitude;
         this.currentLatitude = latitude;
-        notifyObservers();
+        notifyLocationObservers();
 
     }
 
 
     // Notify all registered observers of location changes
-    public void notifyObservers() {
+    private void notifyLocationObservers() {
         log.info("start of notify observers");
-        for (ShuttleObserver observer : observers) {
+        for (ShuttleObserver observer : locationObservers) {
+            observer.updateShuttle(this);
+        }
+        log.info("end of notify observers");
+    }
+
+    private void notifyPassengerObservers() {
+        log.info("start of notify observers");
+        for (ShuttleObserver observer : passengerObservers) {
             observer.updateShuttle(this);
         }
         log.info("end of notify observers");
     }
 
 
-    public void addObserver(ShuttleObserver observer) {
-        observers.add(observer);
+    private void addLocationObserver(ShuttleObserver observer) {
+        locationObservers.add(observer);
     }
 
-    public void removeObserver(ShuttleObserver observer) {
-        observers.remove(observer);
+    private void addPassengerObserver(ShuttleObserver observer) {
+        passengerObservers.add(observer);
     }
+
 }
